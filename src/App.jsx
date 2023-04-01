@@ -1,5 +1,14 @@
 import * as React from 'react';
 
+const title = 'World';
+
+const numbers = [1,2,3,4,5,6,7];
+
+const exponentialNumbers = numbers.map(function (number) {
+  return number * number;
+});
+
+console.log("Hello " + exponentialNumbers);
 
 const boardGameList = [
   {
@@ -44,34 +53,17 @@ const boardGameList = [
   },
 ];
 
-function App() {
-
-  const title = 'World';
-
-  const numbers = [1,2,3,4,5,6,7];
-
-  const exponentialNumbers = numbers.map(function (number) {
-    return number * number;
-  });
-
-  console.log("Hello " + exponentialNumbers);
-
-  
-
-  return (
-    <div>
+const App = () => (
+    <>
       <h1>Hello {title}</h1>
       <Search />
       <BoardGamesList />      
       <hr />
-    </div>
-  )
+    </>
+)
 
-}
-
-function BoardGamesList(){
-  return(
-    <div>
+const BoardGamesList = () => (
+    <>
       <h2>Here are some of my favorite board games:</h2>
       <ul>
       {boardGameList.map((item) =>
@@ -85,16 +77,23 @@ function BoardGamesList(){
         </li>
         )}
       </ul>
-    </div>
+    </>
   )
-}
 
-function Search(){
+
+const Search = () => {
+  const handleChange = (event) => {
+    //synthetic event
+    console.log(event);
+    // value of target (here: input HTML element)
+    console.log(event.target.value);
+  };
+
   return(
-    <div>
+    <>
       <label htmlFor="search">Search: </label>
-      <input id="search" type="text" />
-    </div>
+      <input id="search" type="text" onChange={handleChange}/>
+    </>
   )
 }
 
