@@ -1,35 +1,101 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import * as React from 'react';
+
+
+const boardGameList = [
+  {
+    title: 'Deception Murder in Hong Kong',
+    url: 'https://www.boardgames.ca/deception-murder-in-hong-kong-board-game.html',
+    designer: null,
+    publisher: 'Grey Fox Games',
+    score: 9.5,
+    objectId: 1
+  },
+  {
+    title: 'Cosmic Encounter',
+    url: 'https://www.fantasyflightgames.com/en/products/cosmic-encounter/',
+    designer: null,
+    publisher: 'Fantasy Flight Games',
+    score: 10.0,
+    objectId: 2
+  },
+  {
+    title: 'Dominion',
+    url: 'https://www.riograndegames.com/games/dominion/',
+    designer: null,
+    publisher: 'Rio Grande Games',
+    score: 8.5,
+    objectId: 3
+  },
+  {
+    title: 'Ark Nova',
+    url: 'https://capstone-games.com/board-games/ark-nova/',
+    designer: null,
+    publisher: 'Capstone Games',
+    score: 9.0,
+    objectId: 4
+  },
+  {
+    title: 'Mindbug',
+    url: 'https://mindbug.me/',
+    designer: null,
+    publisher: 'Nerdlab Games',
+    score: 8.5,
+    objectId: 5
+  },
+];
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  const title = 'World';
+
+  const numbers = [1,2,3,4,5,6,7];
+
+  const exponentialNumbers = numbers.map(function (number) {
+    return number * number;
+  });
+
+  console.log("Hello " + exponentialNumbers);
+
+  
 
   return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+    <div>
+      <h1>Hello {title}</h1>
+      <Search />
+      <BoardGamesList />      
+      <hr />
+    </div>
+  )
+
+}
+
+function BoardGamesList(){
+  return(
+    <div>
+      <h2>Here are some of my favorite board games:</h2>
+      <ul>
+      {boardGameList.map((item) =>
+        <li key={item.objectId}>
+          <span>
+            <a href={item.url}>{item.title}</a>
+          </span>
+          <span> by {item.publisher}</span>
+          <span> score: {item.score}</span>
+        
+        </li>
+        )}
+      </ul>
     </div>
   )
 }
 
-export default App
+function Search(){
+  return(
+    <div>
+      <label htmlFor="search">Search: </label>
+      <input id="search" type="text" />
+    </div>
+  )
+}
+
+export default App;
