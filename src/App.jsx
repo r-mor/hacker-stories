@@ -1,9 +1,18 @@
 import * as React from 'react';
 
 
+const useStorageState = (key, initialState) => {
+
+  const [value, setValue] = React.useState(localStorage.getItem(key) || initialState);
+
+  React.useEffect(() => {
+    localStorage.setItem(key, value);
+  }, [key, value])
+
+  return [value, setValue]
+}
+
 const App = () => {
-  
-  const [searchTerm, setSearchTerm] = React.useState(localStorage.getItem('search') || 'World');
 
   const boardGameList = [
     {
@@ -47,11 +56,11 @@ const App = () => {
       objectId: 5
     },
   ];
+  
+  const[searchTerm, setSearchTerm] = useStorageState('search','World');
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
-
-    localStorage.setItem('search', event.target.value);
   }
 
   const searchedBoardGames = boardGameList.filter( 
@@ -61,7 +70,17 @@ const App = () => {
   return (
     <>
       <h1>Hello {searchTerm}</h1>
-      <Search onSearch={handleSearch} searchTerm={searchTerm}/>
+
+      <InputWithLabel 
+        onInputChange={handleSearch} 
+        value={searchTerm} 
+        id='search' 
+        type='text'
+        isFocused={true} 
+      >
+        <strong>Search for</strong>
+        &nbsp;
+      </InputWithLabel>
       
       <BoardGamesList list={searchedBoardGames}/>      
       <hr />
@@ -102,15 +121,31 @@ const ListItem = (
   </>
 )
 
-const Search = ({searchTerm, onSearch}) => (
-  <>
-    <label htmlFor="search">Search: </label>
-    <input id="search" value={searchTerm} type="text" onChange={onSearch}/>
+const InputWithLabel = ({id, type, value, onInputChange, children, isFocused}) =>{ 
+  
+  // A
+  const inputRef = React.useRef();
 
-    <p>
-      Searching for <strong>{searchTerm}</strong>
-    </p>
-  </>
-)
+  // C
+  React.useEffect(() => {
+    if (isFocused && inputRef.current){
+      // D
+      inputRef.current.focus();
+    }
+  }, [isFocused]);
+
+  return (
+    <>
+      <label htmlFor={id}>{children}</label>
+      {/* B */}
+      
+      <input ref={inputRef} id={id} value={value} type={type} onChange={onInputChange}/>
+
+      <p>
+        Searching for <strong>{value}</strong>
+      </p>
+    </>
+  );
+};
 
 export default App;
