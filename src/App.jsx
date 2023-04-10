@@ -1,151 +1,208 @@
 import * as React from 'react';
 
+//Data
+const initialStoriesList = [
+  {
+    title: 'React',
+    url: 'https://reactjs.org/',
+    author: 'Jordan Walke',
+    num_comments: 3,
+    point: 4,
+    objectId: 0,
+  },
+  {
+    title: 'Redux',
+    url: 'https://redux.js.org/',
+    author: 'Dan Abramov, Andrew Clark',
+    num_comments: 2,
+    point: 5,
+    objectId: 1,
+  },
+  {
+    title: 'Microsoft',
+    url: 'https://www.microsoft.com/en-us/sql-server/sql-server-downloads',
+    author: 'Ana K. Milano',
+    num_comments: 3,
+    point: 10,
+    objectId: 2
+  },
+  {
+    title: 'chatGPT',
+    url: 'https://chat.openai.com/chat',
+    author: 'Marilyn W. Taylor',
+    num_comments: 30,
+    point: 14,
+    objectId: 3
+  },
+];
 
-const useStorageState = (key, initialState) => {
-
-  const [value, setValue] = React.useState(localStorage.getItem(key) || initialState);
+const useStorageState = (initialState, key) => {
+  const[searchTerm, setSearchTerm] = React.useState(localStorage.getItem('storiesSearch') || initialState);
 
   React.useEffect(() => {
-    localStorage.setItem(key, value);
-  }, [key, value])
+    localStorage.setItem(key, searchTerm)
+  }, [searchTerm]);
 
-  return [value, setValue]
+  return [searchTerm, setSearchTerm]
 }
 
-const App = () => {
+const getAsyncStories = () =>
+new Promise((resolve, reject) =>
+  setTimeout(
+    () => resolve(
+      { 
+        data: 
+        { 
+          stories: initialStoriesList
+        }
+      }
+    ),
+    2000
+  )
+);
 
-  const boardGameList = [
-    {
-      title: 'Deception Murder in Hong Kong',
-      url: 'https://www.boardgames.ca/deception-murder-in-hong-kong-board-game.html',
-      designer: null,
-      publisher: 'Grey Fox Games',
-      score: 9.5,
-      objectId: 1
-    },
-    {
-      title: 'Cosmic Encounter',
-      url: 'https://www.fantasyflightgames.com/en/products/cosmic-encounter/',
-      designer: null,
-      publisher: 'Fantasy Flight Games',
-      score: 10.0,
-      objectId: 2
-    },
-    {
-      title: 'Dominion',
-      url: 'https://www.riograndegames.com/games/dominion/',
-      designer: null,
-      publisher: 'Rio Grande Games',
-      score: 8.5,
-      objectId: 3
-    },
-    {
-      title: 'Ark Nova',
-      url: 'https://capstone-games.com/board-games/ark-nova/',
-      designer: null,
-      publisher: 'Capstone Games',
-      score: 9.0,
-      objectId: 4
-    },
-    {
-      title: 'Mindbug',
-      url: 'https://mindbug.me/',
-      designer: null,
-      publisher: 'Nerdlab Games',
-      score: 8.5,
-      objectId: 5
-    },
-  ];
+
+const storiesReducer = (state, action) => {
+  switch(action.type){
+    case 'STORIES_FETCH_INIT':
+      return {
+        ...state,
+        isLoading: true,
+        isError: false,
+      };
+    case 'STORIES_FETCH_SUCCESS':
+      return {
+        ...state,
+        isLoading: false,
+        isError: false,
+        data: action.payload
+      };
+    case 'STORIES_FETCH_FAILURE':
+      return {
+        ...state,
+        isLoading: false,
+        isError: true,
+      };
+    case 'REMOVE_STORY':
+      return {
+        ...state,
+        data: state.data.filter(
+          (story) => action.payload.objectId !== story.objectId
+        ),
+      }
+
+    default:
+      throw new Error();
+  }
+}
+
+
+//Components
+
+const App = () => {
+  const title = 'Hacker Stories'
+
+  const [stories, dispatchStories] = React.useReducer(
+    storiesReducer,
+    {data: [], isLoading: false, isError: false }
+  )
+
+  React.useEffect(() => {
+    dispatchStories({ type: 'STORIES_FETCH_INIT' });
+
+      getAsyncStories()
+        .then((result) => {
+          dispatchStories({ type: 'STORIES_FETCH_SUCCESS', payload: result.data.stories });
+      })
+      .catch(() => dispatchStories({ type: 'STORIES_FETCH_FAILURE' }))
+  }, []);
   
-  const[searchTerm, setSearchTerm] = useStorageState('search','World');
+  const [searchTerm, setSearchTerm] = useStorageState('', 'storiesSearch')
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
   }
 
-  const searchedBoardGames = boardGameList.filter( 
+  const handleRemoveStory = (item) => {
+    dispatchStories({
+      type: 'REMOVE_STORY',
+      payload: item,
+    });
+  };
+
+  const storiesSearch = stories.data.filter(
     story => story.title.toLocaleLowerCase().includes(searchTerm.toLowerCase())
-  );
+  )
+  
 
   return (
     <>
-      <h1>Hello {searchTerm}</h1>
-
+      <h2>{title}</h2>
       <InputWithLabel 
-        onInputChange={handleSearch} 
-        value={searchTerm} 
-        id='search' 
-        type='text'
-        isFocused={true} 
-      >
-        <strong>Search for</strong>
-        &nbsp;
+        id = 'search'
+        type = 'text'
+        isFocused={true}
+        onChange={handleSearch} value={searchTerm}>
+          <b>Search for: </b>
       </InputWithLabel>
       
-      <BoardGamesList list={searchedBoardGames}/>      
-      <hr />
-    </>
-)}
+      {stories.isError && <p>Something went wrong ...</p>}
 
-const BoardGamesList = ({list}) => (
-    <>
-      <h2>Here are some of my favorite board games:</h2>
-      <ul>
-      {list.map(({objectId, ...item}) =>
-        <ListItem key={objectId} 
-        {...item}
-        />
+      {stories.isLoading ? (<p>Is Loading...</p>) : (
+        <List list={storiesSearch} onRemoveItem={handleRemoveStory}/>
       )}
-      </ul>
-  </>
+    </>
   )
+}
 
-const ListItem = (
-  { 
-    
-    title, 
-    url, 
-    publisher, 
-    score
-    
-  }
-  ) => (
-  <>
-    <li>
-      <span>
-        <a href={url}>{title}</a>
-      </span>
-      <span> by {publisher}</span>
-      <span> score: {score}</span>
-    </li>
-  </>
-)
-
-const InputWithLabel = ({id, type, value, onInputChange, children, isFocused}) =>{ 
-  
-  // A
-  const inputRef = React.useRef();
-
-  // C
-  React.useEffect(() => {
-    if (isFocused && inputRef.current){
-      // D
-      inputRef.current.focus();
-    }
-  }, [isFocused]);
+const List = ({list, onRemoveItem}) => {
 
   return (
     <>
-      <label htmlFor={id}>{children}</label>
-      {/* B */}
-      
-      <input ref={inputRef} id={id} value={value} type={type} onChange={onInputChange}/>
-
-      <p>
-        Searching for <strong>{value}</strong>
-      </p>
+    <ul>
+      {list.map(item =>
+        <li key={item.objectId}>
+          <ListItem 
+            item={item}
+            onRemoveItem={onRemoveItem}
+          />
+        </li>
+      )}
+    </ul>
+    <hr/>
     </>
-  );
-};
+  )
+}
 
-export default App;
+const ListItem = ({item, onRemoveItem}) => {
+
+  return(
+    <>
+      <button onClick={onRemoveItem.bind(null, item)}>Remove</button> &nbsp;
+      <span>{item.title}</span> &nbsp;
+      <span>{item.author}</span> &nbsp;
+      <span>{item.points}</span> &nbsp;
+    </>
+  )
+}
+
+const InputWithLabel = ({id, type, value, onChange, isFocused, children}) => {
+
+  return(
+  <>
+    <div>
+      <label htmlFor={id}>{children}</label>
+      <input id={id} type={type} value={value} onChange={onChange} autoFocus={isFocused}/>
+      <p>[{value}]</p>
+    </div>
+  </>
+  )
+} 
+
+
+
+export default App
+
+
+
+
