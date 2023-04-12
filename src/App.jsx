@@ -96,8 +96,9 @@ const storiesReducer = (state, action) => {
   }
 }
 
+//A
+const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
 
-//Components
 
 const App = () => {
   const title = 'Hacker Stories'
@@ -110,9 +111,15 @@ const App = () => {
   React.useEffect(() => {
     dispatchStories({ type: 'STORIES_FETCH_INIT' });
 
-      getAsyncStories()
+      fetch(`${API_ENDPOINT}react`) //B
+        .then((response) => response.json())
         .then((result) => {
-          dispatchStories({ type: 'STORIES_FETCH_SUCCESS', payload: result.data.stories });
+          dispatchStories(
+            { 
+              type: 'STORIES_FETCH_SUCCESS', 
+              payload: result.hits,
+            }
+          );
       })
       .catch(() => dispatchStories({ type: 'STORIES_FETCH_FAILURE' }))
   }, []);
